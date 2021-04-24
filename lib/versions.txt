@@ -1,0 +1,3 @@
+glfw=3.3.4
+dearIMGUI=1.82
+opengl(glad)=4.6
