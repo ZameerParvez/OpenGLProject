@@ -1,39 +1,5 @@
-#include <glad/glad.h> // NOTE: must be the first include
-#include <GLFW/glfw3.h>
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-
-#include <iostream>
-
-// helper functions to manage imgui context
-namespace ManageImgui {
-    const auto createContext = [](GLFWwindow* window) {
-        const char* glsl_version = "#version 130";
-        ImGui::CreateContext();
-        ImGui::StyleColorsDark();
-        ImGui_ImplGlfw_InitForOpenGL(window, true);
-        ImGui_ImplOpenGL3_Init(glsl_version);
-    };
-
-    const auto destroyContext = []() {
-        ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
-        ImGui::DestroyContext();
-    };
-
-    const auto startFrame = []() {
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-    };
-
-    const auto endFrame = []() {
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    };    
-}
-
+#include "demos/demos.h"
+#include "graphicsLibs.h"
 
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, true);
@@ -41,34 +7,20 @@ void processInput(GLFWwindow* window) {
 
 auto framebuffer_size_callback = [](GLFWwindow* window, int width, int height) -> void { glViewport(0, 0, width, height); };
 
+
 int main() {
-    // Init glfw to use opengl 4.6
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    constexpr int WIDTH = 800;
+    constexpr int HEIGHT = 600;
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
-    if (!window) {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-
-    glfwMakeContextCurrent(window);
-
-    // Init glad so opengl functions can be used
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialise GLAD" << std::endl;
-        return -1;
-    }
+    GLFWwindow* window = ManageSetup::GlfwWindowContextSetup(WIDTH, HEIGHT, "LearnOpenGL");
+    ManageSetup::LoadOpenGL();
 
     // set viewport size and add call back to update size when the window is expanded or shrunk
-    glViewport(0, 0, 800, 600);
+    glViewport(0, 0, WIDTH, HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // set up imgui
-    ManageImgui::createContext(window);
+    ManageSetup::ImguiContextSetup(window);
 
     // the render loop
     // Infinite loop until we want to close the window
@@ -79,23 +31,21 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        ManageImgui::startFrame();
+        ManageSetup::ImguiContextStartFrame();
 
         // do rendering here
-        bool a = true;
-        ImGui::ShowDemoWindow(&a);
+        Demos::RunDemos();
 
         // ====
 
-        ManageImgui::endFrame();
+        ManageSetup::ImguiContextEndFrame();
+        
         // poll input events and calls callbacks, and swaps buffers
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    // clean up imgui
-    ManageImgui::destroyContext();
-
-    glfwTerminate();
+    ManageSetup::ImguiContextDestroy();
+    ManageSetup::GlfwWindowContextDestroy();
     return 0;
 }
