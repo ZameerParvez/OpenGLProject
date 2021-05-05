@@ -1,118 +1,131 @@
 #include "demos.h"
 
+using namespace Renderer;
+
 // NOTE: These demos might be better as objects so that they can de allocate resources at destruction time
 namespace SimpleTriange {
 
-constexpr char* vertexShaderSource =
-    "#version 460 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "}\0";
+struct Triangle {
+    const char* vertexShaderSource =
+        "#version 460 core\n"
+        "layout (location = 0) in vec3 aPos;\n"
+        "void main()\n"
+        "{\n"
+        "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+        "}\0";
 
-constexpr char* fragmentShaderSource =
-    "#version 460 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-    "}\0";
+    const char* fragmentShaderSource =
+        "#version 460 core\n"
+        "out vec4 FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+        "}\0";
 
-constexpr char* fragmentShaderSource2 =
-    "#version 460 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
-    "}\0";
+    const char* fragmentShaderSource2 =
+        "#version 460 core\n"
+        "out vec4 FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "   FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
+        "}\0";
 
-// TODO: Be able to change these in imgui (would need to keep track of what shaders and VAOs have been made)
-GLuint ShaderInUse[2];
-GLuint VAOInUse[2];
+    GLuint ShaderInUse[2];
+    GLuint VAOInUse[2];
 
-void InitialiseTriangle() {
-    float vertices1[]{
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f, 0.5f, 0.0f
-    };
-    float vertices2[]{
-        -1.0f, -0.7f, 0.0f,
-        -0.6f, -0.6f, 0.0f,
-        -0.2f, -0.7f, 0.0f
-    };
+    Triangle() {
+        InitialiseTriangle();
+    }
 
-    GLuint vertexShader = CompileShader(vertexShaderSource, ShaderType::VERTEX);
-    GLuint fragmentShader = CompileShader(fragmentShaderSource, ShaderType::FRAGMENT);
-    GLuint shaderProgram = LinkShaders(vertexShader, fragmentShader);
-    
-    GLuint fragmentShader2 = CompileShader(fragmentShaderSource2, ShaderType::FRAGMENT);
-    GLuint shaderProgram2 = LinkShaders(vertexShader, fragmentShader2);
+    ~Triangle() {
+        glDeleteVertexArrays(1, &VAOInUse[0]);
+        glDeleteVertexArrays(1, &VAOInUse[1]);
+    }
 
-    // use the program (already compiled and linked) and delete the no longer needed shader objects
-    glUseProgram(shaderProgram);
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    glDeleteShader(fragmentShader2);
+    void InitialiseTriangle() {
+        float vertices1[]{
+            -0.5f, -0.5f, 0.0f,
+            0.5f, -0.5f, 0.0f,
+            0.0f, 0.5f, 0.0f};
+        float vertices2[]{
+            -1.0f, -0.7f, 0.0f,
+            -0.6f, -0.6f, 0.0f,
+            -0.2f, -0.7f, 0.0f};
 
-    auto initVertexArray = [](float* vertices, size_t sizeOfVertices) -> GLuint {
-        GLuint VAO, VBO;
+        GLuint vertexShader = Shader::CompileShader(vertexShaderSource, ShaderType::VERTEX);
+        GLuint fragmentShader = Shader::CompileShader(fragmentShaderSource, ShaderType::FRAGMENT);
+        GLuint shaderProgram = Shader::LinkShaders(vertexShader, fragmentShader);
 
-        glGenVertexArrays(1, &VAO);
-        glBindVertexArray(VAO);
+        GLuint fragmentShader2 = Shader::CompileShader(fragmentShaderSource2, ShaderType::FRAGMENT);
+        GLuint shaderProgram2 = Shader::LinkShaders(vertexShader, fragmentShader2);
 
-        glGenBuffers(1, &VBO);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeOfVertices, vertices, GL_STATIC_DRAW);
+        // use the program (already compiled and linked) and delete the no longer needed shader objects
+        glUseProgram(shaderProgram);
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+        glDeleteShader(fragmentShader2);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(0));
-        glEnableVertexAttribArray(0);
+        auto initVertexArray = [](float* vertices, size_t sizeOfVertices) -> GLuint {
+            GLuint VAO, VBO;
 
-        // unbind the VAO, so it doesn't manage refer to anything else
-        glBindVertexArray(0);
+            glGenVertexArrays(1, &VAO);
+            glBindVertexArray(VAO);
 
-        return VAO;
-    };
-    
-    VAOInUse[0] = initVertexArray(vertices1, sizeof(vertices1));
-    VAOInUse[1] = initVertexArray(vertices2, sizeof(vertices2));
+            glGenBuffers(1, &VBO);
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeOfVertices, vertices, GL_STATIC_DRAW);
 
-    ShaderInUse[0] = shaderProgram;
-    ShaderInUse[1] = shaderProgram2;
-}
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(0));
+            glEnableVertexAttribArray(0);
 
-void ImguiMenu() {
-    static bool drawWireFrame = false;
+            // unbind the VAO, so it doesn't manage refer to anything else
+            glBindVertexArray(0);
 
-    // NOTE: It could be better to have things which change the state available in a top level imgui
-    ImGui::Begin("Simple Triangles");
+            glDeleteBuffers(1, &VBO);
 
-    if (ImGui::Button("Toggle Wireframe Mode")) {
-        drawWireFrame = !drawWireFrame;
-        if (drawWireFrame) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        } else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            return VAO;
+        };
+
+        VAOInUse[0] = initVertexArray(vertices1, sizeof(vertices1));
+        VAOInUse[1] = initVertexArray(vertices2, sizeof(vertices2));
+
+        ShaderInUse[0] = shaderProgram;
+        ShaderInUse[1] = shaderProgram2;
+    }
+
+    void Draw() {
+        for (unsigned int i = 0; i < 2; i++) {
+            glUseProgram(ShaderInUse[i]);
+            glBindVertexArray(VAOInUse[i]);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
         }
+        glBindVertexArray(0);
     }
 
-    ImGui::End();
-}
+    void ImguiMenu() {
+        static bool drawWireFrame = false;
 
-}
+        // NOTE: It could be better to have things which change the state available in a top level imgui
+        ImGui::Begin("Simple Triangles");
 
-extern void Demos::SimpleTriangle(bool init) {
-    if (init) {
-        SimpleTriange::InitialiseTriangle();
+        if (ImGui::Button("Toggle Wireframe Mode")) {
+            drawWireFrame = !drawWireFrame;
+            if (drawWireFrame) {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            } else {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
+        }
+
+        ImGui::End();
     }
+};
 
-    for (unsigned int i = 0; i < 2; i++) {
-        glUseProgram(SimpleTriange::ShaderInUse[i]);
-        glBindVertexArray(SimpleTriange::VAOInUse[i]);
-        glDrawArrays(GL_TRIANGLES, 0, 6);   
-    }
-    glBindVertexArray(0);
-    
-    SimpleTriange::ImguiMenu();
+}  // namespace SimpleTriange
+
+extern void Demos::SimpleTriangle() {
+    static SimpleTriange::Triangle tri;
+
+    tri.Draw();
+    tri.ImguiMenu();
 }

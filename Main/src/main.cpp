@@ -1,5 +1,5 @@
 #include "demos/demos.h"
-#include "graphicsLibs.h"
+#include "renderer/renderer.h"
 
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, true);
@@ -12,7 +12,8 @@ int main() {
     constexpr int WIDTH = 800;
     constexpr int HEIGHT = 600;
 
-    GLFWwindow* window = ManageSetup::GlfwWindowContextSetup(WIDTH, HEIGHT, "LearnOpenGL");
+    GLFWwindow* window = ManageSetup::GlfwContextManage::Instance(WIDTH, HEIGHT, "LearnOpenGL").window;
+
     ManageSetup::LoadOpenGL();
 
     // set viewport size and add call back to update size when the window is expanded or shrunk
@@ -46,6 +47,5 @@ int main() {
     }
 
     ManageSetup::ImguiContextDestroy();
-    ManageSetup::GlfwWindowContextDestroy();
     return 0;
 }

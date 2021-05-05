@@ -11,8 +11,23 @@ project(
     LANGUAGES CXX
 )
 
+add_compile_options(
+       -std=c++17 -Wall -Wno-error=maybe-uninitialized
+       $<$<CONFIG:RELEASE>:-Ofast>
+       $<$<CONFIG:DEBUG>:-O0>
+       $<$<CONFIG:DEBUG>:-ggdb3>
+)
+add_compile_definitions(
+        $<$<CONFIG:RELEASE>:NDEBUG>
+)
 
 set(SRCDIR "src")
+
+# add the renderer library
+add_subdirectory("${SRCDIR}/renderer")
+
+# copy resources to build directory
+file(COPY "${SRCDIR}/shaders" DESTINATION "${SRCDIR}")
 
 # for demos
 set(DEMO_DIR "${SRCDIR}/demos")
@@ -22,7 +37,7 @@ set(DEMOS_SRC
     "${DEMO_DIR}/simpleRectangle.cpp"
 )
 add_library(Demos STATIC ${DEMOS_SRC})
-target_link_libraries(Demos PUBLIC Libs)
+target_link_libraries(Demos PUBLIC Libs Renderer)
 target_include_directories(
     Demos
     PRIVATE
@@ -34,7 +49,7 @@ set(SOURCES
     "${SRCDIR}/main.cpp"
 )
 add_executable(Main ${SOURCES})
-target_link_libraries(Main PUBLIC Libs Demos)
+target_link_libraries(Main PUBLIC Libs Demos Renderer)
 target_include_directories(
     Main
     PRIVATE

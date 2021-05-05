@@ -1,101 +1,115 @@
 #include "demos.h"
 
-namespace SimpleRectangle {
+using namespace Renderer;
 
-constexpr char* vertexShaderSource =
-    "#version 460 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "}\0";
+namespace SimpleRectange {
 
-constexpr char* fragmentShaderSource =
-    "#version 460 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-    "}\0";
+struct Rectangle {
+    GLuint VAO;
+    ShaderManaged s;
+    const Shader* ShaderInUse = nullptr;
 
-// TODO: Be able to change these in imgui (would need to keep track of what shaders and VAOs have been made)
-GLuint ShaderInUse;
-GLuint VAOInUse;
+    Rectangle() {
+        InitialiseRectangle();
+    }
 
-void InitialiseRectangle() {
-    float vertices[] = {
-        0.5f, 0.5f, 0.0f,    // top right
-        0.5f, -0.5f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f,  // bottom left
-        -0.5f, 0.5f, 0.0f    // top left
-    };
-    unsigned int indices[] = {
-        // note that we start from 0!
-        0, 1, 3,  // first triangle
-        1, 2, 3   // second triangle
-    };
+    ~Rectangle() {
+        // delete the VAO
+        glDeleteVertexArrays(1, &VAO);
+    }
 
-    GLuint vertexShader = CompileShader(vertexShaderSource, ShaderType::VERTEX);
-    GLuint fragmentShader = CompileShader(fragmentShaderSource, ShaderType::FRAGMENT);
-    GLuint shaderProgram = LinkShaders(vertexShader, fragmentShader);
+    void InitialiseRectangle() {
+        float vertices[] = {
+            // vertices         // colours
+            0.5f, 0.5f, 0.0f,   1.0f, 1.0f, 1.0f,   // top right
+            0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom right
+            -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
+            -0.5f, 0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // top left
+        };
+        unsigned int indices[] = {
+            // note that we start from 0!
+            0, 1, 3,  // first triangle
+            1, 2, 3   // second triangle
+        };
 
-    // use the program (already compiled and linked) and delete the no longer needed shader objects
-    glUseProgram(shaderProgram);
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+        s.AddShader("test", Shader("src/shaders/testVertex.vs", Shader::DEFAULT_FRAGMENT_SHADER));
+        s.GetProgram("test")->use();
+        ShaderInUse = s.GetProgram("test");
 
-    GLuint VAO, VBO, EBO;
+        GLuint VBO, EBO;
 
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+        glGenVertexArrays(1, &VAO);
+        glBindVertexArray(VAO);
 
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        glGenBuffers(1, &VBO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+        glGenBuffers(1, &EBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+        // load vertex position data into vertex attributes
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
 
-    // unbind the VAO, so it doesn't manage refer to anything else
-    glBindVertexArray(0);
+        // load vertex colour data into vertex attributes
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(1);
 
-    VAOInUse = VAO;
-    ShaderInUse = shaderProgram;
-}
 
-void ImguiMenu() {
-    static bool drawWireFrame = false;
+        // unbind the VAO, so it doesn't manage refer to anything else
+        glBindVertexArray(0);
 
-    // NOTE: It could be better to have things which change the state available in a top level imgui
-    ImGui::Begin("Simple Rectangle");
+        // delete the VBO and EBO (must be done after unbinding the vertex array object)
+        glDeleteBuffers(1, &VBO);
+        glDeleteBuffers(1, &EBO);
+    }
 
-    if (ImGui::Button("Toggle Wireframe Mode")) {
-        drawWireFrame = !drawWireFrame;
-        if (drawWireFrame) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        } else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    void Draw() {
+        ShaderInUse->use();
+
+        ShaderInUse->SetUniform("time", (float)glfwGetTime());
+
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+    }
+
+    // TODO: Improve use of ImGui to make a more understandable ui
+    void ImguiMenu() {
+        // TODO: Move this functionality into the renderer
+        static bool drawWireFrame = false;
+
+        // NOTE: It could be better to have things which change the state available in a top level imgui
+        ImGui::Begin("Simple Rectangle");
+
+        if (ImGui::Button("Toggle Wireframe Mode")) {
+            drawWireFrame = !drawWireFrame;
+            if (drawWireFrame) {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            } else {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
         }
+
+        ImGui::BeginChild(1);
+        ImGui::Text("Shaders");
+        if (ImGui::Button("default")) ShaderInUse = s.GetProgram(ShaderManaged::DEFAULT_SHADER);
+        for (const auto& prog : s.existingShaders) {
+            if (ImGui::Button(prog.first.c_str())) ShaderInUse = s.GetProgram(prog.first);
+        }
+        ImGui::EndChildFrame();
+
+        ImGui::End();
     }
+};
 
-    ImGui::End();
 }
-}
 
-// may not work as expected
-extern void Demos::SimpleRectangle(bool init) {
-    if (init) {
-        SimpleRectangle::InitialiseRectangle();
-    }
+extern void Demos::SimpleRectangle() {
+    static SimpleRectange::Rectangle rect;
 
-    glUseProgram(SimpleRectangle::ShaderInUse);
-    glBindVertexArray(SimpleRectangle::VAOInUse);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
-
-    SimpleRectangle::ImguiMenu();
+    rect.Draw();
+    rect.ImguiMenu();
 }
