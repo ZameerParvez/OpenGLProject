@@ -12,6 +12,7 @@ extern void Demos::ImguiDemoSelector(Demos::demoFunc& currDemo) {
     ImGui::Begin("Demo Selector");
     demoSelect("Simple Triangle", Demos::SimpleTriangle);
     demoSelect("Simple Rectangle", Demos::SimpleRectangle);
+    demoSelect("Simple Texture", Demos::SimpleTexture);
     ImGui::End();
 }
 

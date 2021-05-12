@@ -6,6 +6,15 @@
 namespace ManageSetup {
 static bool glfwContextExists = false;
 
+
+struct GLFWWindowCreationError : public std::runtime_error {
+    GLFWWindowCreationError(const std::string& msg) : std::runtime_error(msg) {}
+};
+
+struct OpenGLLoaderError : public std::runtime_error {
+    OpenGLLoaderError(const std::string& msg) : std::runtime_error(msg) {}
+};
+
 GLFWwindow* GlfwContextManage::GlfwWindowContextSetup(int width, int height, const char* windowName) {
     // Init glfw to use opengl 4.6
     glfwInit();
@@ -15,10 +24,8 @@ GLFWwindow* GlfwContextManage::GlfwWindowContextSetup(int width, int height, con
 
     GLFWwindow* window = glfwCreateWindow(width, height, windowName, NULL, NULL);
     if (!window) {
-        std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
-        // TODO: throw error
-        // return -1;
+        throw GLFWWindowCreationError("Failed to create GLFW window");
     }
 
     glfwContextExists = true;
@@ -29,16 +36,14 @@ GLFWwindow* GlfwContextManage::GlfwWindowContextSetup(int width, int height, con
 
 extern int LoadOpenGL() {
     if (!glfwContextExists) {
-        throw std::runtime_error("glfw context must exist before loading opengl");
+        throw OpenGLLoaderError("glfw context must exist before loading opengl");
     }
 
     // Init glad so opengl functions can be used
     static bool isLoaded = false;
     if (isLoaded) return 1;
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialise GLAD" << std::endl;
-        // TODO: throw error
-        return -1;
+        throw OpenGLLoaderError("Failed to initialise GLAD");
     }
 
     isLoaded = true;

@@ -6,7 +6,7 @@ namespace SimpleRectange {
 
 struct Rectangle {
     GLuint VAO;
-    ShaderManaged s;
+    ManagedResources<Shader> shaders;
     const Shader* ShaderInUse = nullptr;
 
     Rectangle() {
@@ -32,9 +32,9 @@ struct Rectangle {
             1, 2, 3   // second triangle
         };
 
-        s.AddShader("test", Shader("src/shaders/testVertex.vs", Shader::DEFAULT_FRAGMENT_SHADER));
-        s.GetProgram("test")->use();
-        ShaderInUse = s.GetProgram("test");
+        shaders.OwnRes("test", std::move(Shader("src/resources/shaders/testVertex.vs", Shader::DEFAULT_FRAGMENT_SHADER).Build()));
+        shaders.GetRes("test")->Use();
+        ShaderInUse = shaders.GetRes("test");
 
         GLuint VBO, EBO;
 
@@ -67,7 +67,7 @@ struct Rectangle {
     }
 
     void Draw() {
-        ShaderInUse->use();
+        ShaderInUse->Use();
 
         ShaderInUse->SetUniform("time", (float)glfwGetTime());
 
@@ -95,9 +95,9 @@ struct Rectangle {
 
         ImGui::BeginChild(1);
         ImGui::Text("Shaders");
-        if (ImGui::Button("default")) ShaderInUse = s.GetProgram(ShaderManaged::DEFAULT_SHADER);
-        for (const auto& prog : s.existingShaders) {
-            if (ImGui::Button(prog.first.c_str())) ShaderInUse = s.GetProgram(prog.first);
+        if (ImGui::Button("default")) ShaderInUse = shaders.GetRes(shaders.DEFAULT_RES_NAME);
+        for (const auto& prog : shaders.existingResources) {
+            if (ImGui::Button(prog.first.c_str())) ShaderInUse = shaders.GetRes(prog.first);
         }
         ImGui::EndChildFrame();
 

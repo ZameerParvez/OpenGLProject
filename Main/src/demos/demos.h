@@ -9,6 +9,7 @@ using demoFunc = void (*)(void);
 // === Demos ===
 extern void SimpleTriangle();
 extern void SimpleRectangle();
+extern void SimpleTexture();
 // =============
 
 // NOTE: if the same thing is selected then the same shape will be initialised again

@@ -12,8 +12,8 @@ project(
 )
 
 # Copy default shaders to build directory
-file(COPY "defaultVertex.vs" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY "defaultFragment.fs" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+set(RES_DIR "default-resources")
+file(COPY "${RES_DIR}" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
 set(SOURCES
 "graphicsLibs.cpp"

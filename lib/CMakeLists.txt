@@ -67,6 +67,12 @@ target_link_libraries(imgui glad glfw)
 # I think that this is mainly for linux?
 find_package(OpenGL REQUIRED)
 
+
+# stb_image
+set(STB_DIR "stb_image")
+add_library(stb INTERFACE)
+target_include_directories(stb INTERFACE "${STB_DIR}")
+
 # Final Links
 add_library(Libs INTERFACE)
-target_link_libraries(Libs INTERFACE glad OpenGL::GL glfw imgui)
+target_link_libraries(Libs INTERFACE glad OpenGL::GL glfw imgui stb)
