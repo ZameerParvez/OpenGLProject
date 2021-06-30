@@ -18,6 +18,7 @@ file(COPY "${RES_DIR}" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 set(SOURCES
 "graphicsLibs.cpp"
 "shader.cpp"
+"texture.cpp"
 )
 add_library(Renderer STATIC ${SOURCES})
 # NOTE: maybe only link with the things needed, which would just be glad

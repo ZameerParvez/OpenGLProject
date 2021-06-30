@@ -1,9 +1,7 @@
 #include "shader.h"
 
 #include <fstream>
-#include <iostream>
 #include <sstream>
-
 
 using namespace Renderer;
 
@@ -62,7 +60,7 @@ GLuint Shader::LinkShaders(GLuint vertexShader, GLuint fragmentShader) {
     if (!success) {
         glGetShaderInfoLog(shaderProgram, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-            << infoLog << std::endl;
+                  << infoLog << std::endl;
     }
 
     return shaderProgram;
@@ -87,7 +85,6 @@ GLuint Shader::CompileAndLink(const Shader& shader) {
     return programId;
 }
 
-
 std::string Shader::ReadShaderSource(const std::string& filePath) {
     std::ifstream shaderFile;
     std::ostringstream source;
@@ -99,7 +96,7 @@ std::string Shader::ReadShaderSource(const std::string& filePath) {
         shaderFile.close();
     } catch (const std::ifstream::failure& e) {
         std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ\npath:" << filePath << "\n"
-            << e.what() << std::endl;
+                  << e.what() << std::endl;
     }
 
     return source.str();
@@ -107,13 +104,27 @@ std::string Shader::ReadShaderSource(const std::string& filePath) {
 
 Shader& Shader::Build() {
     if (shaderId != 0) glDeleteProgram(shaderId);
+    std::cout << "\n== Building Shader =="
+              << std::endl;
     shaderId = CompileAndLink(*this);
+    std::cout << *this << "\n-- Done --" << std::endl;
     return *this;
 }
 
 const Shader& Shader::Build() const {
     if (shaderId != 0) glDeleteProgram(shaderId);
+    std::cout << "\n== Building Shader =="
+              << std::endl;
     shaderId = CompileAndLink(*this);
+    std::cout << *this << "\n-- Done --" << std::endl;
     return *this;
 }
 
+std::ostream& Renderer::operator<<(std::ostream& os, const Shader& sh) {
+    os
+        << "Shader ID: " << sh.shaderId << "\n"
+        << "    Vertex Path: " << sh.vsPath << "\n"
+        << "    Fragment Path: " << sh.fsPath;
+
+    return os;
+}

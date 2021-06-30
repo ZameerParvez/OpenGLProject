@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 
 #include "openglLoader.h"
@@ -15,6 +16,9 @@ enum class ShaderType {
 class Shader {
    private:
     mutable GLuint shaderId = 0;
+
+    friend struct Uniform;
+    friend std::ostream& operator<<(std::ostream& os, const Shader& sh);
 
     static std::string ReadShaderSource(const std::string& filePath);
     static GLuint CompileAndLink(const Shader& shader);
@@ -59,19 +63,6 @@ class Shader {
         glUseProgram(shaderId);
     }
 
-    // NOTE: the shader program must be currently in use for the uniform to be updated
-    void SetUniform(const std::string& name, bool value) const {
-        glUniform1i(glGetUniformLocation(shaderId, name.c_str()), static_cast<int>(value));
-    }
-
-    void SetUniform(const std::string& name, int value) const {
-        glUniform1i(glGetUniformLocation(shaderId, name.c_str()), value);
-    }
-
-    void SetUniform(const std::string& name, float value) const {
-        glUniform1f(glGetUniformLocation(shaderId, name.c_str()), value);
-    }
-
     static const Shader* GetDefault() {
         static const Shader defaultShader(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER);
         static bool exists = false;
@@ -83,5 +74,7 @@ class Shader {
         return &defaultShader;
     }
 };
+
+std::ostream& operator<<(std::ostream& os, const Shader& sh);
 
 }  // namespace Renderer

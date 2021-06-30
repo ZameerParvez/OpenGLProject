@@ -68,8 +68,7 @@ struct Rectangle {
 
     void Draw() {
         ShaderInUse->Use();
-
-        ShaderInUse->SetUniform("time", (float)glfwGetTime());
+        Uniform::Set(*ShaderInUse, "time", static_cast<float>(glfwGetTime()));
 
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
