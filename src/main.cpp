@@ -7,15 +7,12 @@ void processInput(GLFWwindow* window) {
 
 auto framebuffer_size_callback = [](GLFWwindow* window, int width, int height) -> void { glViewport(0, 0, width, height); };
 
+constexpr int WIDTH = 800;
+constexpr int HEIGHT = 600;
+static GLFWwindow* window = ManageSetup::GlfwContextManage::Instance(WIDTH, HEIGHT, "LearnOpenGL").window;
+static int oglStatus = ManageSetup::LoadOpenGL();
 
 int main() {
-    constexpr int WIDTH = 800;
-    constexpr int HEIGHT = 600;
-
-    GLFWwindow* window = ManageSetup::GlfwContextManage::Instance(WIDTH, HEIGHT, "LearnOpenGL").window;
-
-    ManageSetup::LoadOpenGL();
-
     // set viewport size and add call back to update size when the window is expanded or shrunk
     glViewport(0, 0, WIDTH, HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);

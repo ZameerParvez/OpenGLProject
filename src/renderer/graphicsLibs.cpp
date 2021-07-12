@@ -6,7 +6,6 @@
 namespace ManageSetup {
 static bool glfwContextExists = false;
 
-
 struct GLFWWindowCreationError : public std::runtime_error {
     GLFWWindowCreationError(const std::string& msg) : std::runtime_error(msg) {}
 };
@@ -80,7 +79,7 @@ extern void ImguiContextEndFrame() {
 };  // namespace ManageSetup
 
 
-// NOTE: could use glDebugOutput after creating a debug context in glfw, because I am using opengl 4.6 and it could give more detailed error messages
+// IDEA: could use glDebugOutput after creating a debug context in glfw, because I am using opengl 4.6 and it could give more detailed error messages
 GLenum GlCheckError(const char* file, int line) {
     GLenum errorCode;
     while ((errorCode = glGetError()) != GL_NO_ERROR) {

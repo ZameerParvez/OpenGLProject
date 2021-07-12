@@ -9,4 +9,4 @@ project(Project VERSION 1.0
                   LANGUAGES CXX)
 
 add_subdirectory("lib")
-add_subdirectory("Main")
+add_subdirectory("src")

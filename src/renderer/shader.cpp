@@ -5,6 +5,21 @@
 
 using namespace Renderer;
 
+
+const std::unordered_map<std::string, const Shader> Shader::GetDefaults() {
+    std::unordered_map<std::string, const Shader> smap {};
+
+    auto s1 = std::make_pair(Shader::DEFAULT_SHADER_PROGRAM_NAME, std::move(Shader()));
+
+    smap.insert(std::move(s1));
+
+    for (const auto& tex : DEFAULTS) tex.second.Build();
+
+    return smap;
+}
+
+const std::unordered_map<std::string, const Shader> Shader::DEFAULTS = Shader::GetDefaults();
+
 // NOTE: This requires the glfw context to be loaded and glad to be loaded, which causes problems with using these functions in global scope
 GLuint Shader::CompileShader(const char* shaderSource, ShaderType type) {
     GLuint glShaderType;
@@ -122,9 +137,10 @@ const Shader& Shader::Build() const {
 
 std::ostream& Renderer::operator<<(std::ostream& os, const Shader& sh) {
     os
-        << "Shader ID: " << sh.shaderId << "\n"
+        << "{ Shader ID: " << sh.shaderId << "\n"
         << "    Vertex Path: " << sh.vsPath << "\n"
-        << "    Fragment Path: " << sh.fsPath;
+        << "    Fragment Path: " << sh.fsPath 
+        << "}";
 
     return os;
 }

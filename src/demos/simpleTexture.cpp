@@ -1,40 +1,47 @@
+#include <iostream>
+
 #include "demos.h"
 
 using namespace Renderer;
 
-namespace SimpleRectange {
+namespace TexDemo {
 
-struct Rectangle {
+struct TexDemo {
     GLuint VAO;
     ManagedResources<Shader> shaders;
+    ManagedResources<Texture> textures;
     const Shader* ShaderInUse = nullptr;
 
-    Rectangle() {
-        InitialiseRectangle();
+    TexDemo() {
+        InitialiseTexDemo();
     }
 
-    ~Rectangle() {
+    ~TexDemo() {
         // delete the VAO
         glDeleteVertexArrays(1, &VAO);
     }
 
-    void InitialiseRectangle() {
+    void InitialiseTexDemo() {
         float vertices[] = {
-            // vertices         // colours
-            0.5f, 0.5f, 0.0f,   1.0f, 1.0f, 1.0f,   // top right
-            0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom right
-            -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
-            -0.5f, 0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // top left
+            // positions          // colors           // texture coords
+            0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,    // top right
+            0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,   // bottom right
+            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom left
+            -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f    // top left
         };
+
         unsigned int indices[] = {
             // note that we start from 0!
             0, 1, 3,  // first triangle
             1, 2, 3   // second triangle
         };
 
-        shaders.OwnRes("test", std::move(Shader("src/resources/shaders/testVertex.vs", Shader::DEFAULT_FRAGMENT_SHADER).Build()));
-        shaders.GetRes("test")->Use();
-        ShaderInUse = shaders.GetRes("test");
+        textures.OwnRes("container", std::move(Texture("resources/textures/container.jpg", TexUnit::T0, ImageDataType::RGB).Build()));
+        textures.OwnRes("smiley", std::move(Texture("resources/textures/awesomeface.png", TexUnit::T15, ImageDataType::RGBA).Build()));
+
+        shaders.OwnRes("textureDemo", std::move(Shader("resources/shaders/textureDemo.vs", "resources/shaders/textureDemo.fs").Build()));
+        shaders.GetRes("textureDemo")->Use();
+        ShaderInUse = shaders.GetRes("textureDemo");
 
         GLuint VBO, EBO;
 
@@ -50,13 +57,16 @@ struct Rectangle {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
         // load vertex position data into vertex attributes
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
 
         // load vertex colour data into vertex attributes
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
 
+        // load texture coordinates into vertex attributes
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+        glEnableVertexAttribArray(2);
 
         // unbind the VAO, so it doesn't manage refer to anything else
         glBindVertexArray(0);
@@ -68,7 +78,9 @@ struct Rectangle {
 
     void Draw() {
         ShaderInUse->Use();
-        Uniform::Set(*ShaderInUse, "time", static_cast<float>(glfwGetTime()));
+
+        Uniform::Set(*ShaderInUse, "texture1", *textures.GetRes("container"));
+        Uniform::Set(*ShaderInUse, "texture2", *textures.GetRes("smiley"));
 
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -81,7 +93,7 @@ struct Rectangle {
         static bool drawWireFrame = false;
 
         // NOTE: It could be better to have things which change the state available in a top level imgui
-        ImGui::Begin("Simple Rectangle");
+        ImGui::Begin("Simple TexDemo");
 
         if (ImGui::Button("Toggle Wireframe Mode")) {
             drawWireFrame = !drawWireFrame;
@@ -94,7 +106,8 @@ struct Rectangle {
 
         ImGui::BeginChild(1);
         ImGui::Text("Shaders");
-        if (ImGui::Button("default")) ShaderInUse = shaders.GetRes(shaders.DEFAULT_RES_NAME);
+        if (ImGui::Button("rebuild current shader")) ShaderInUse->Build().Use();
+        if (ImGui::Button("default")) ShaderInUse = shaders.GetRes(Shader::DEFAULT_SHADER_PROGRAM_NAME);
         for (const auto& prog : shaders.existingResources) {
             if (ImGui::Button(prog.first.c_str())) ShaderInUse = shaders.GetRes(prog.first);
         }
@@ -104,11 +117,11 @@ struct Rectangle {
     }
 };
 
-}
+}  // namespace TexDemo
 
-extern void Demos::SimpleRectangle() {
-    static SimpleRectange::Rectangle rect;
+extern void Demos::SimpleTexture() {
+    static TexDemo::TexDemo texDemo;
 
-    rect.Draw();
-    rect.ImguiMenu();
+    texDemo.Draw();
+    texDemo.ImguiMenu();
 }

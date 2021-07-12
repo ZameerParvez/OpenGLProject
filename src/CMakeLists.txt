@@ -21,7 +21,7 @@ add_compile_definitions(
         $<$<CONFIG:RELEASE>:NDEBUG>
 )
 
-set(SRCDIR "src")
+set(SRCDIR ".")
 
 # add the renderer library
 add_subdirectory("${SRCDIR}/renderer")

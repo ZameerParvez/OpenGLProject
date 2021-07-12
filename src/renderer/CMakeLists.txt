@@ -21,5 +21,5 @@ set(SOURCES
 "texture.cpp"
 )
 add_library(Renderer STATIC ${SOURCES})
-# NOTE: maybe only link with the things needed, which would just be glad
+# IDEA: maybe only link with the things needed, which would just be glad
 target_link_libraries(Renderer PUBLIC Libs)

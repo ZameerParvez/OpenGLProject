@@ -1,8 +1,8 @@
 #pragma once
 
-#include "openglLoader.h"
 #include "graphicsLibs.h"
+#include "managedResources.h"
+#include "openglLoader.h"
 #include "shader.h"
 #include "texture.h"
-#include "managedResources.h"
 #include "uniform.h"

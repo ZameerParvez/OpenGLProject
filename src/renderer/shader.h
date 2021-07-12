@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <unordered_map>
 
 #include "openglLoader.h"
 
@@ -12,7 +13,6 @@ enum class ShaderType {
     FRAGMENT
 };
 
-// TODO: Improve useability by allowing statically defined shaders and shadermanagers in global scope (although it probably shouldn't be used like that) (this would likely require the glfw context and glad loader functions to have their state to not be set from main, and be callable from anywhere)
 class Shader {
    private:
     mutable GLuint shaderId = 0;
@@ -20,18 +20,23 @@ class Shader {
     friend struct Uniform;
     friend std::ostream& operator<<(std::ostream& os, const Shader& sh);
 
-    static std::string ReadShaderSource(const std::string& filePath);
+    static const std::unordered_map<std::string, const Shader> GetDefaults();
+    static const std::unordered_map<std::string, const Shader> DEFAULTS;
+
     static GLuint CompileAndLink(const Shader& shader);
 
    public:
+    // returns the the source code of the shader at the given path as a string
+    static std::string ReadShaderSource(const std::string& filePath);
     // returns a reference to a compiled shader (does not manage the deletion of the shader)
     static GLuint CompileShader(const char* shaderSource, ShaderType type);
     // currently returns the reference to the compiled shader, and compiles vertex
     static GLuint LinkShaders(GLuint vertexShader, GLuint fragmentShader);
 
     // NOTE: These shaders are in the renderer's source directory and are coppied to the cmake build directory when built. CMAKE can't track updates to these and other shaders, so when they are update make sure to touch the cmake file for the main project before building
-    inline static const std::string DEFAULT_VERTEX_SHADER = "src/renderer/default-resources/shaders/defaultVertex.vs";
-    inline static const std::string DEFAULT_FRAGMENT_SHADER = "src/renderer/default-resources/shaders/defaultFragment.fs";
+    inline static const std::string DEFAULT_VERTEX_SHADER = "renderer/default-resources/shaders/defaultVertex.vs";
+    inline static const std::string DEFAULT_FRAGMENT_SHADER = "renderer/default-resources/shaders/defaultFragment.fs";
+    inline static const std::string DEFAULT_SHADER_PROGRAM_NAME = "default-shader";
 
     std::string vsPath;
     std::string fsPath;
@@ -64,14 +69,11 @@ class Shader {
     }
 
     static const Shader* GetDefault() {
-        static const Shader defaultShader(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER);
-        static bool exists = false;
-        if (!exists) {
-            defaultShader.Build();
-            exists = true;
-        }
+        return &DEFAULTS.find(DEFAULT_SHADER_PROGRAM_NAME)->second;
+    }
 
-        return &defaultShader;
+    static const std::unordered_map<std::string, const Shader>& GetDefaultMap() {
+        return Shader::DEFAULTS;
     }
 };
 

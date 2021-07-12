@@ -5,7 +5,6 @@
 #include "shader.h"
 #include "texture.h"
 
-
 namespace Renderer {
 
 // NOTE: the shader program must be currently in use for the uniform to be updated

@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
 #include <iostream>
+#include <string>
+#include <unordered_map>
 
 #include "openglLoader.h"
 
@@ -54,18 +55,22 @@ enum class TexUnit {
     T15 = GL_TEXTURE15
 };
 
-// TODO: Add a default texture
-
 // NOTE: this only supports 2d textures
 class Texture {
    private:
     friend std::ostream& operator<<(std::ostream& os, const Texture& tex);
 
+    inline static const std::string DEFAULT_TEXTURE1 = "renderer/default-resources/textures/texture1.png";
+    inline static const std::string DEFAULT_TEXTURE2 = "renderer/default-resources/textures/texture2.png";
+
+    static const std::unordered_map<std::string, const Texture> GetDefaults();
+    static const std::unordered_map<std::string, const Texture> DEFAULTS;
+
     GLuint LoadTexture() const;
- 
 
    public:
-    inline static const std::string DEFAULT_TEXTURE = "src/renderer/default-resources/textures/default.png";
+    inline static const std::string DEFAULT_TEXTURE1_NAME = "default-texture1";
+    inline static const std::string DEFAULT_TEXTURE2_NAME = "default-texture2";
 
     mutable GLuint texId = 0;
 
@@ -76,10 +81,10 @@ class Texture {
     TextureWrapping tWrap = TextureWrapping::REPEAT;
     TextureFiltering magFilter = TextureFiltering::LINEAR;
     TextureFiltering minFilter = TextureFiltering::NEAREST_MIPMAP_LINEAR;
-    float borderColour[4] = {0, 0, 0, 0}; // TODO: allow changing this in the constructor and the parameter settings function
+    float borderColour[4] = {0, 0, 0, 0};  // TODO: allow changing this in the constructor and the parameter settings function
 
     Texture(
-        const std::string& path = DEFAULT_TEXTURE,
+        const std::string& path = DEFAULT_TEXTURE1,
         TexUnit texUnit = TexUnit::T0,
         ImageDataType imgType = ImageDataType::RGBA,
         TextureWrapping sWrap = TextureWrapping::REPEAT,
@@ -88,7 +93,7 @@ class Texture {
         TextureFiltering minFilter = TextureFiltering::NEAREST_MIPMAP_LINEAR) : path{path}, texUnit{texUnit}, imgType{imgType}, sWrap{sWrap}, tWrap{tWrap}, magFilter{magFilter}, minFilter{minFilter} {}
 
     ~Texture() {
-        if (texId == 0 ) return;
+        if (texId == 0) return;
         glDeleteTextures(1, &texId);
     }
 
@@ -122,31 +127,33 @@ class Texture {
         return *this;
     }
 
-    void SetTextureParams(
-        const std::string& path,
-        TexUnit texUnit = TexUnit::T0,
-        ImageDataType imgType = ImageDataType::RGBA,
-        TextureWrapping sWrap = TextureWrapping::REPEAT,
-        TextureWrapping tWrap = TextureWrapping::REPEAT,
-        TextureFiltering magFilter = TextureFiltering::LINEAR,
-        TextureFiltering minFilter = TextureFiltering::NEAREST_MIPMAP_LINEAR) {
-        
-        this->path = path;
-        this->texUnit = texUnit;
-        this->imgType = imgType;
-        this->sWrap = sWrap;
-        this->tWrap = tWrap;
-        this->magFilter = magFilter;
-        this->minFilter = minFilter;
-    }
-
     // build and rebuild the Texture
     Texture& Build();
     const Texture& Build() const;
 
+    // NOTE: the texture unit offset still needs to be sent to the shaders texture sampler
+    // activates the texture
     void Use() const {
         glActiveTexture(static_cast<int>(this->texUnit));
         glBindTexture(GL_TEXTURE_2D, this->texId);
+    }
+
+    static const Texture* GetDefault(unsigned int texNum = 0) {
+        switch (texNum) {
+            case 0:
+                return &Texture::DEFAULTS.find(DEFAULT_TEXTURE1_NAME)->second;
+                break;
+            case 1:
+                return &Texture::DEFAULTS.find(DEFAULT_TEXTURE2_NAME)->second;
+                break;
+            default:
+                return &Texture::DEFAULTS.find(DEFAULT_TEXTURE1_NAME)->second;
+                break;
+        }
+    }
+
+    static const std::unordered_map<std::string, const Texture>& GetDefaultMap() {
+        return Texture::DEFAULTS;
     }
 };
 

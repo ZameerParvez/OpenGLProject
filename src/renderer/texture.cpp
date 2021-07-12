@@ -5,6 +5,22 @@
 
 using namespace Renderer;
 
+const std::unordered_map<std::string, const Texture> Texture::GetDefaults() {
+    std::unordered_map<std::string, const Texture> tmap {};
+
+    auto t1 = std::make_pair(Texture::DEFAULT_TEXTURE1_NAME, std::move(Texture(Texture::DEFAULT_TEXTURE1, TexUnit::T0)));
+    auto t2 = std::make_pair(Texture::DEFAULT_TEXTURE2_NAME, std::move(Texture(Texture::DEFAULT_TEXTURE2, TexUnit::T1)));
+
+    tmap.insert(std::move(t1));
+    tmap.insert(std::move(t2));
+
+    for (const auto& tex : DEFAULTS) tex.second.Build();
+
+    return tmap;
+}
+
+const std::unordered_map<std::string, const Texture> Texture::DEFAULTS = Texture::GetDefaults();
+
 GLuint Texture::LoadTexture() const {
     constexpr GLenum textureSize = static_cast<GLenum>(TextureSize::T2D);
 
@@ -61,9 +77,10 @@ const Texture& Texture::Build() const {
 }
 
 std::ostream& Renderer::operator<<(std::ostream& os, const Texture& tex) {
-    os << "Texture ID: " << tex.texId << "\n"
+    os << "{ Texture ID: " << tex.texId << "\n"
        << "   Texture Unit (offset): " << static_cast<int>(tex.texUnit) - static_cast<int>(TexUnit::T0) << "\n"
-       << "   Texture Path: " << tex.path;
+       << "   Texture Path: " << tex.path 
+       << " }";
 
     return os;
 }
