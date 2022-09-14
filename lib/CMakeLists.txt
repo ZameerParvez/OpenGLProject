@@ -8,9 +8,10 @@ project(
     Libs 
     VERSION 1.0 
     DESCRIPTION "Collection of useful libraries for graphics programming"
+    LANGUAGES C CXX
 )
 
-# GLAD
+# GLAD for openGL 4.6
 set(GLAD_DIR "glad")
 set(GLAD_SRC "${GLAD_DIR}/src")
 set(GLAD_INC "${GLAD_DIR}/include")
@@ -18,7 +19,7 @@ set(GLAD_INC "${GLAD_DIR}/include")
 add_library(glad STATIC "${GLAD_SRC}/glad.c")
 target_include_directories(glad PUBLIC "${GLAD_INC}")
 
-# GLFW
+# GLFW 3.3.7
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -26,7 +27,10 @@ set(GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only")
 
 add_subdirectory(glfw)
 
-# IMGUI
+# GLM
+add_subdirectory(glm)
+
+# IMGUI 1.87
 set(IMGUI_DIR "imgui")
 set(IMGUI_SRC
     ${IMGUI_DIR}/imgui.cpp
@@ -62,17 +66,19 @@ target_include_directories(
 
 target_link_libraries(imgui glad glfw)
 
-
 # OpenGL
 # I think that this is mainly for linux?
 find_package(OpenGL REQUIRED)
-
 
 # stb_image
 set(STB_DIR "stb_image")
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE "${STB_DIR}")
 
+# fmt 9.1.0
+add_subdirectory(fmt)
+
 # Final Links
 add_library(Libs INTERFACE)
-target_link_libraries(Libs INTERFACE glad OpenGL::GL glfw imgui stb)
+target_link_libraries(Libs INTERFACE glad OpenGL::GL glfw imgui stb glm fmt)
+target_compile_options(Libs INTERFACE -std=c++20;-Ofast;-w)

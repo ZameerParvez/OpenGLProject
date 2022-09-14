@@ -1,0 +1,9 @@
+#pragma once
+
+#include <filesystem>
+
+namespace Demos {
+  const std::filesystem::path RESOURCE_PATH = "@RESOURCE_PATH@";
+  const std::filesystem::path TEXTURE_PATH = RESOURCE_PATH / "textures";
+  const std::filesystem::path SHADER_PATH = RESOURCE_PATH / "shaders";
+}

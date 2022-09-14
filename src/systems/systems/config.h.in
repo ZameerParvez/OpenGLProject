@@ -1,0 +1,9 @@
+#pragma once
+
+#include <filesystem>
+
+namespace System {
+  const std::filesystem::path DEFAULT_RESOURCE_PATH = "@RESOURCE_PATH@";
+  const std::filesystem::path DEFAULT_TEXTURE_PATH = DEFAULT_RESOURCE_PATH / "textures";
+  const std::filesystem::path DEFAULT_SHADER_PATH = DEFAULT_RESOURCE_PATH / "shaders";
+}
